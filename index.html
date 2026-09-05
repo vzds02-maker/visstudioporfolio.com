@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vis Studio — Frame by frame.</title>
+<meta name="description" content="Vis Studio — video editing for Reels, YouTube and Ads. Frame by frame.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#000000;
+    --white:#FFFFFF;
+    --lime:#D6FF3F;
+    --gray-dark:#1A1A1A;
+    --gray-light:#D3D1C7;
+    --gap:24px;
+    --maxw:1240px;
+    --ease:cubic-bezier(.16,.84,.44,1);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--black);
+    color:var(--white);
+    font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-weight:400;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  img,video{max-width:100%;display:block;}
+
+  a{color:inherit;text-decoration:none;}
+
+  .wrap{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:0 24px;
+  }
+
+  h1,h2,h3{
+    margin:0;
+    font-weight:800;
+    letter-spacing:-0.02em;
+    line-height:1.05;
+  }
+
+  p{margin:0;}
+
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--lime);
+  }
+  .eyebrow::before{
+    content:"";
+    width:16px;
+    height:2px;
+    background:var(--lime);
+    display:inline-block;
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:16px 30px;
+    font-family:inherit;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:.02em;
+    border-radius:100px;
+    border:2px solid var(--lime);
+    cursor:pointer;
+    transition:transform .35s var(--ease), background .25s ease, color .25s ease;
+    white-space:nowrap;
+  }
+  .btn-solid{
+    background:var(--lime);
+    color:var(--black);
+  }
+  .btn-solid:hover{
+    background:var(--black);
+    color:var(--lime);
+    transform:translateY(-3px);
+  }
+  .btn-ghost{
+    background:transparent;
+    color:var(--white);
+    border-color:rgba(255,255,255,.25);
+  }
+  .btn-ghost:hover{
+    border-color:var(--lime);
+    color:var(--lime);
+    transform:translateY(-3px);
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    z-index:100;
+    padding:18px 0;
+    background:rgba(0,0,0,0);
+    border-bottom:1px solid transparent;
+    transition:background .3s ease, border-color .3s ease, padding .3s ease;
+  }
+  header.scrolled{
+    background:rgba(0,0,0,.82);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    padding:14px 0;
+  }
+  header .wrap{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+  }
+  .logo{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    font-weight:800;
+    font-size:19px;
+    letter-spacing:-0.01em;
+  }
+  .logo svg{display:block;flex-shrink:0;}
+  .logo-text{white-space:nowrap;}
+
+  nav.main-nav{
+    display:flex;
+    align-items:center;
+    gap:36px;
+  }
+  nav.main-nav a{
+    font-size:14px;
+    font-weight:600;
+    color:var(--gray-light);
+    position:relative;
+    padding:4px 0;
+    transition:color .2s ease;
+  }
+  nav.main-nav a:hover{color:var(--white);}
+  nav.main-nav a::after{
+    content:"";
+    position:absolute;
+    left:0;bottom:0;
+    width:0;height:2px;
+    background:var(--lime);
+    transition:width .25s var(--ease);
+  }
+  nav.main-nav a:hover::after{width:100%;}
+
+  .nav-cta{display:flex;align-items:center;gap:18px;}
+  .nav-cta .btn{padding:11px 22px;font-size:13px;}
+
+  .burger{
+    display:none;
+    width:40px;height:40px;
+    border:1px solid rgba(255,255,255,.2);
+    border-radius:50%;
+    background:transparent;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .burger span{position:relative;width:16px;height:10px;}
+  .burger span::before,.burger span::after{
+    content:"";
+    position:absolute;left:0;right:0;
+    height:2px;background:var(--white);
+    transition:transform .3s ease, top .3s ease;
+  }
+  .burger span::before{top:0;}
+  .burger span::after{top:8px;}
+  .burger.open span::before{transform:rotate(45deg);top:4px;}
+  .burger.open span::after{transform:rotate(-45deg);top:4px;}
+
+  .mobile-nav{
+    position:fixed;
+    inset:0;
+    z-index:99;
+    background:var(--black);
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    gap:28px;
+    padding:24px 32px;
+    transform:translateY(-100%);
+    transition:transform .4s var(--ease);
+  }
+  .mobile-nav.open{transform:translateY(0);}
+  .mobile-nav a{font-size:32px;font-weight:800;}
+  .mobile-nav .btn{margin-top:12px;}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding:180px 0 110px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    overflow:hidden;
+  }
+  .hero{--mx:72%;--my:8%;}
+  .hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:radial-gradient(380px circle at var(--mx) var(--my), rgba(214,255,63,.08) 0%, rgba(214,255,63,0) 60%);
+    pointer-events:none;
+    transition:background .4s ease;
+  }
+  .hero-inner{position:relative;z-index:1;max-width:900px;}
+  .hero .eyebrow{margin-bottom:22px;}
+  .hero h1{
+    font-size:clamp(40px, 8vw, 92px);
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:18px;
+  }
+  .hero h1 .logo{font-size:clamp(40px, 8vw, 92px);gap:14px;}
+  .hero h1 .logo svg{width:0.62em;height:0.62em;}
+  .tagline{
+    font-size:clamp(40px, 8vw, 92px);
+    font-weight:800;
+    letter-spacing:-0.02em;
+    margin-top:6px;
+    color:var(--lime);
+  }
+  .hero-sub{
+    margin-top:28px;
+    max-width:520px;
+    font-size:18px;
+    color:var(--gray-light);
+    line-height:1.6;
+  }
+  .hero-actions{
+    margin-top:44px;
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:20px;
+  }
+  .hero-note{font-size:13px;color:rgba(255,255,255,.45);font-weight:600;}
+
+  .hero-stats{
+    margin-top:80px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:24px;
+    max-width:640px;
+  }
+  .hero-stats div{border-top:1px solid rgba(255,255,255,.15);padding-top:14px;}
+  .hero-stats strong{display:block;font-size:30px;font-weight:800;color:var(--white);}
+  .hero-stats span{font-size:12px;color:var(--gray-light);text-transform:uppercase;letter-spacing:.08em;}
+
+  /* ---------- Hero entrance animation ---------- */
+  .hero-inner > *{
+    opacity:0;
+    animation:heroFadeUp .9s var(--ease) both;
+  }
+  .hero-inner > *:nth-child(1){animation-delay:.05s;}
+  .hero-inner > *:nth-child(2){animation-delay:.16s;}
+  .hero-inner > *:nth-child(3){animation-delay:.3s;}
+  .hero-inner > *:nth-child(4){animation-delay:.42s;}
+  .hero-inner > *:nth-child(5){animation-delay:.54s;}
+  .hero-inner > *:nth-child(6){animation-delay:.64s;}
+  .hero-inner > *:nth-child(7){animation-delay:.74s;}
+  @keyframes heroFadeUp{
+    from{opacity:0;transform:translateY(26px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  /* ---------- Hero logo draw-in ---------- */
+  .hero .logo svg path{
+    stroke-dasharray:50;
+    stroke-dashoffset:50;
+    animation:drawChevron .7s var(--ease) .55s forwards;
+  }
+  .hero .logo svg line{
+    transform-box:fill-box;
+    transform-origin:50% 50%;
+    animation:growLine .45s var(--ease) both;
+  }
+  .hero .logo svg line:nth-of-type(1){animation-delay:1.05s;}
+  .hero .logo svg line:nth-of-type(2){animation-delay:1.13s;}
+  .hero .logo svg line:nth-of-type(3){animation-delay:1.21s;}
+  @keyframes drawChevron{to{stroke-dashoffset:0;}}
+  @keyframes growLine{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+
+  /* ---------- Section shell ---------- */
+  section{padding:110px 0;border-bottom:1px solid rgba(255,255,255,.08);}
+  .section-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:24px;
+    margin-bottom:56px;
+    flex-wrap:wrap;
+  }
+  .section-head h2{font-size:clamp(30px,4.4vw,52px);max-width:640px;}
+  .section-head p{color:var(--gray-light);max-width:340px;font-size:15px;}
+
+  /* ---------- Portfolio ---------- */
+  .reel-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:18px;
+  }
+  .reel-card{
+    position:relative;
+    border-radius:14px;
+    overflow:hidden;
+    background:var(--gray-dark);
+    aspect-ratio:9/16;
+    border:1px solid rgba(255,255,255,.08);
+    transition:transform .45s var(--ease), border-color .3s ease, box-shadow .4s ease;
+  }
+  .reel-card:hover,
+  .reel-card:focus-within{
+    transform:scale(1.035);
+    border-color:var(--lime);
+    box-shadow:0 18px 50px rgba(0,0,0,.55), 0 0 0 1px rgba(214,255,63,.25);
+    z-index:2;
+  }
+  .reel-card video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    background:#000;
+    display:block;
+  }
+  .reel-meta{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:14px;
+    background:linear-gradient(0deg, rgba(0,0,0,.88) 0%, rgba(0,0,0,0) 100%);
+    pointer-events:none;
+  }
+  .reel-title{
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--white);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .reel-tag{
+    flex-shrink:0;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--black);
+    background:var(--lime);
+    padding:4px 8px;
+    border-radius:100px;
+  }
+
+  .placeholder-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:18px;
+  }
+  .placeholder-card{
+    aspect-ratio:9/16;
+    border-radius:14px;
+    border:1.5px dashed rgba(255,255,255,.25);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:24px;
+    color:rgba(255,255,255,.4);
+    font-size:13px;
+    font-weight:600;
+  }
+
+  .videos-note{
+    margin-top:26px;
+    font-size:13px;
+    color:rgba(255,255,255,.4);
+  }
+  .videos-note code{
+    background:var(--gray-dark);
+    padding:2px 7px;
+    border-radius:5px;
+    color:var(--lime);
+  }
+
+  /* ---------- Services ---------- */
+  .services-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+  }
+  .service-card{
+    background:var(--gray-dark);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:38px 32px;
+    transition:transform .4s var(--ease), border-color .3s ease;
+  }
+  .service-card:hover{
+    transform:translateY(-8px);
+    border-color:var(--lime);
+  }
+  .service-num{
+    font-size:13px;
+    font-weight:800;
+    color:var(--lime);
+    letter-spacing:.08em;
+  }
+  .service-card h3{
+    margin-top:22px;
+    font-size:24px;
+  }
+  .service-card p{
+    margin-top:14px;
+    color:var(--gray-light);
+    font-size:15px;
+    line-height:1.65;
+  }
+  .service-list{
+    margin-top:22px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .service-list span{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.03em;
+    color:var(--gray-light);
+    border:1px solid rgba(255,255,255,.15);
+    padding:6px 12px;
+    border-radius:100px;
+  }
+
+  /* ---------- Process ---------- */
+  .process-track{
+    position:relative;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:20px;
+  }
+  .process-track::before{
+    content:"";
+    position:absolute;
+    top:23px;
+    left:0;right:0;
+    height:2px;
+    background:repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 8px, transparent 8px 16px);
+    z-index:0;
+  }
+  .process-step{
+    position:relative;
+    z-index:1;
+    padding-top:0;
+  }
+  .process-index{
+    width:46px;height:46px;
+    border-radius:50%;
+    background:var(--black);
+    border:2px solid var(--lime);
+    color:var(--lime);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    font-size:15px;
+    margin-bottom:26px;
+  }
+  .process-step h3{font-size:19px;font-weight:700;}
+  .process-step p{margin-top:10px;font-size:14px;color:var(--gray-light);line-height:1.6;}
+
+  /* ---------- Testimonials ---------- */
+  .testi-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+  }
+  .testi-card{
+    background:var(--gray-dark);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:34px 30px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    min-height:230px;
+  }
+  .testi-quote{font-size:36px;font-weight:800;color:var(--lime);line-height:1;}
+  .testi-text{margin-top:14px;font-size:15.5px;color:var(--white);line-height:1.65;}
+  .testi-rating{
+    margin-top:26px;
+    color:var(--lime);
+    font-size:16px;
+    letter-spacing:.15em;
+  }
+
+  /* ---------- Footer / CTA ---------- */
+  footer{padding:110px 0 40px;border-bottom:none;}
+  .footer-cta{
+    text-align:left;
+    max-width:800px;
+  }
+  .footer-cta h2{
+    font-size:clamp(34px,6vw,64px);
+  }
+  .footer-cta h2 span{color:var(--lime);}
+  .footer-actions{
+    margin-top:38px;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  .footer-grid{
+    margin-top:100px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:40px;
+    flex-wrap:wrap;
+    padding-top:40px;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+  .footer-brand .logo{margin-bottom:14px;}
+  .footer-brand p{font-size:13px;color:rgba(255,255,255,.4);max-width:260px;}
+  .footer-links{
+    display:flex;
+    gap:64px;
+    flex-wrap:wrap;
+  }
+  .footer-col h4{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:rgba(255,255,255,.4);
+    margin-bottom:16px;
+    font-weight:700;
+  }
+  .footer-col a{
+    display:block;
+    font-size:14px;
+    font-weight:600;
+    color:var(--gray-light);
+    margin-bottom:12px;
+    transition:color .2s ease;
+  }
+  .footer-col a:hover{color:var(--lime);}
+  .footer-bottom{
+    margin-top:60px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+    font-size:12px;
+    color:rgba(255,255,255,.35);
+  }
+  .back-top{
+    width:42px;height:42px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.2);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:border-color .25s ease, transform .3s ease;
+  }
+  .back-top:hover{border-color:var(--lime);color:var(--lime);transform:translateY(-3px);}
+
+  /* ---------- Reveal animation ---------- */
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .8s var(--ease), transform .8s var(--ease);}
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  /* ---------- Count-up stats ---------- */
+  .hero-stats strong{font-variant-numeric:tabular-nums;}
+
+  /* ---------- Reel card tilt (JS-driven inline transform) ---------- */
+  .reel-card{will-change:transform;}
+
+  /* ---------- Film grain overlay ---------- */
+  .grain{
+    position:fixed;
+    inset:-100px;
+    z-index:9997;
+    pointer-events:none;
+    opacity:.045;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grainShift 9s steps(8) infinite;
+  }
+  @keyframes grainShift{
+    0%,100%{transform:translate(0,0);}
+    12%{transform:translate(-2%,-4%);}
+    24%{transform:translate(-6%,2%);}
+    36%{transform:translate(4%,-6%);}
+    48%{transform:translate(-4%,6%);}
+    60%{transform:translate(6%,4%);}
+    72%{transform:translate(-6%,-2%);}
+    84%{transform:translate(2%,6%);}
+  }
+
+  /* ---------- Reduced motion ---------- */
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{
+      animation-duration:.001ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:.001ms !important;
+      scroll-behavior:auto !important;
+    }
+    .hero-inner > *{opacity:1;transform:none;animation:none;}
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:1080px){
+    .reel-grid,.placeholder-grid{grid-template-columns:repeat(3,1fr);}
+    .services-grid,.testi-grid{grid-template-columns:repeat(3,1fr);gap:16px;}
+  }
+
+  @media (max-width:860px){
+    nav.main-nav,.nav-cta{display:none;}
+    .burger{display:flex;}
+    .hero{padding:150px 0 80px;}
+    .hero-stats{grid-template-columns:repeat(3,1fr);margin-top:60px;}
+    section{padding:80px 0;}
+    .services-grid{grid-template-columns:1fr;}
+    .testi-grid{grid-template-columns:1fr;}
+    .process-track{grid-template-columns:1fr;gap:36px;}
+    .process-track::before{display:none;}
+    .footer-grid{flex-direction:column;gap:36px;}
+  }
+
+  @media (max-width:600px){
+    .reel-grid,.placeholder-grid{grid-template-columns:repeat(2,1fr);gap:12px;}
+    .hero-stats{grid-template-columns:repeat(3,1fr);gap:14px;}
+    .hero-stats strong{font-size:22px;}
+    .section-head{flex-direction:column;align-items:flex-start;}
+    .footer-links{gap:36px;}
+  }
+
+  @media (max-width:420px){
+    .reel-grid,.placeholder-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+    .wrap{padding:0 18px;}
+    .btn{padding:14px 22px;font-size:14px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ============ HEADER ============ -->
+<header id="siteHeader">
+  <div class="wrap">
+    <a href="#top" class="logo" aria-label="Vis Studio home">
+      <svg width="26" height="26" viewBox="0 0 64 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 6 L26 20 L6 34" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <line x1="38" y1="30" x2="46" y2="10" stroke="#D6FF3F" stroke-width="5" stroke-linecap="round"/>
+        <line x1="48" y1="30" x2="56" y2="10" stroke="#D6FF3F" stroke-width="5" stroke-linecap="round"/>
+        <line x1="58" y1="30" x2="66" y2="10" stroke="#D6FF3F" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+      </svg>
+      <span class="logo-text">Vis Studio</span>
+    </a>
+
+    <nav class="main-nav">
+      <a href="#work">Portfolio</a>
+      <a href="#services">Services</a>
+      <a href="#process">Process</a>
+      <a href="#testimonials">Reviews</a>
+    </nav>
+
+    <div class="nav-cta">
+      <a href="#contact" class="btn btn-solid">DM to book</a>
+    </div>
+
+    <button class="burger" id="burgerBtn" aria-label="Open menu" aria-expanded="false">
+      <span></span>
+    </button>
+  </div>
+</header>
+
+<nav class="mobile-nav" id="mobileNav">
+  <a href="#work">Portfolio</a>
+  <a href="#services">Services</a>
+  <a href="#process">Process</a>
+  <a href="#testimonials">Reviews</a>
+  <a href="#contact" class="btn btn-solid">DM to book</a>
+</nav>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" style="border-top:none;">
+    <div class="wrap hero-inner">
+      <span class="eyebrow">Video editing studio</span>
+      <h1>
+        <span class="logo">
+          <svg width="0.62em" height="0.62em" viewBox="0 0 64 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 6 L26 20 L6 34" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <line x1="38" y1="30" x2="46" y2="10" stroke="#D6FF3F" stroke-width="5" stroke-linecap="round"/>
+            <line x1="48" y1="30" x2="56" y2="10" stroke="#D6FF3F" stroke-width="5" stroke-linecap="round"/>
+            <line x1="58" y1="30" x2="66" y2="10" stroke="#D6FF3F" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+          </svg>
+        </span>
+        Vis Studio
+      </h1>
+      <div class="tagline">Frame by frame.</div>
+      <p class="hero-sub">
+        We cut Reels, YouTube videos and Ads that keep people watching.
+        Fast turnaround. Clean pacing. No filler.
+      </p>
+      <div class="hero-actions">
+        <a href="#contact" class="btn btn-solid">DM to book</a>
+        <a href="#work" class="btn btn-ghost">See the work</a>
+      </div>
+      <p class="hero-note">Currently booking new projects for this month.</p>
+
+      <div class="hero-stats">
+        <div>
+          <strong class="stat-num" data-target="100" data-suffix="+">0+</strong>
+          <span>Videos edited</span>
+        </div>
+        <div>
+          <strong class="stat-num" data-target="48" data-suffix="h">0h</strong>
+          <span>Avg. turnaround</span>
+        </div>
+        <div>
+          <strong class="stat-num" data-target="3" data-suffix="">0</strong>
+          <span>Formats: Reels · YT · Ads</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PORTFOLIO ============ -->
+  <section id="work">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <h2>Selected work.</h2>
+        <p>Real edits, real projects. Click any card to play.</p>
+      </div>
+
+      <div class="reel-grid reveal">
+
+        <article class="reel-card">
+          <video class="reel-video" poster="0905.jpg" preload="metadata" controls playsinline>
+            <source src="0905.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">The Value Equation</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="0831%20%281%29.jpg" preload="metadata" controls playsinline>
+            <source src="0831%20%281%29.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">The Editing Secret</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="0717.jpg" preload="metadata" controls playsinline>
+            <source src="0717.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">Podcast: Views Breakdown</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="0815%20%281%29.jpg" preload="metadata" controls playsinline>
+            <source src="0815%20%281%29.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">Vintage Film Restoration</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="0815%281%29.jpg" preload="metadata" controls playsinline>
+            <source src="0815%281%29.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">Studio Showreel</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="0815%282%29.jpg" preload="metadata" controls playsinline>
+            <source src="0815%282%29.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">Over It — Lyric Edit</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="0821%281%29.jpg" preload="metadata" controls playsinline>
+            <source src="0821%281%29.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">Retention Hack</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="0823%281%29.jpg" preload="metadata" controls playsinline>
+            <source src="0823%281%29.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">1-Hour Edit in 15 Sec</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="222.jpg" preload="metadata" controls playsinline>
+            <source src="222.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">Destroying Your Feet</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="Quality%20Restoration-Ultra%20HD-0330.jpg" preload="metadata" controls playsinline>
+            <source src="Quality%20Restoration-Ultra%20HD-0330.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">AirPods Unboxing</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="Quality%20Restoration-Ultra%20HD-0407.jpg" preload="metadata" controls playsinline>
+            <source src="Quality%20Restoration-Ultra%20HD-0407.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">Dacă Nu Tu…</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="Quality%20Restoration-Ultra%20HD-0412.jpg" preload="metadata" controls playsinline>
+            <source src="Quality%20Restoration-Ultra%20HD-0412.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">Oamenilor</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="Quality%20Restoration-Ultra%20HD-0416.jpg" preload="metadata" controls playsinline>
+            <source src="Quality%20Restoration-Ultra%20HD-0416.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">Clarity of Mind</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="Quality%20Restoration-Ultra%20HD-0422.jpg" preload="metadata" controls playsinline>
+            <source src="Quality%20Restoration-Ultra%20HD-0422.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">Flat Insoles Hook</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="Quality%20Restoration-Ultra%20HD-0427%20.jpg" preload="metadata" controls playsinline>
+            <source src="Quality%20Restoration-Ultra%20HD-0427%20.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">UGC Review Ad</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="Quality%20Restoration-Ultra%20HD-unnamed%20.jpg" preload="metadata" controls playsinline>
+            <source src="Quality%20Restoration-Ultra%20HD-unnamed%20.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">Foundation of Your Reality</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+        <article class="reel-card">
+          <video class="reel-video" poster="silviu%20bet%287%29.jpg" preload="metadata" controls playsinline>
+            <source src="silviu%20bet%287%29.mp4" type="video/mp4">
+          </video>
+          <div class="reel-meta"><span class="reel-title">Viral Dog Robot</span><span class="reel-tag">Reel</span></div>
+        </article>
+
+      </div>
+
+      <p class="videos-note">Add your videos to <code>/videos</code> folder (or the project root) — this grid is generated from files found next to <code>index.html</code>.</p>
+    </div>
+  </section>
+
+  <!-- ============ SERVICES ============ -->
+  <section id="services">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <h2>What we cut.</h2>
+        <p>Three formats. One standard: worth watching.</p>
+      </div>
+
+      <div class="services-grid reveal">
+        <div class="service-card">
+          <span class="service-num">01</span>
+          <h3>Reels / Shorts</h3>
+          <p>Fast cuts. Hooked in 3 seconds. Built for the scroll, not the skip.</p>
+          <div class="service-list">
+            <span>Hooks</span><span>Captions</span><span>Sound design</span>
+          </div>
+        </div>
+        <div class="service-card">
+          <span class="service-num">02</span>
+          <h3>YouTube</h3>
+          <p>Long-form that keeps pace. Story-first editing that holds attention to the end.</p>
+          <div class="service-list">
+            <span>Pacing</span><span>Color</span><span>Thumbnails</span>
+          </div>
+        </div>
+        <div class="service-card">
+          <span class="service-num">03</span>
+          <h3>Ads</h3>
+          <p>Performance edits. Built to convert, tested to stop the thumb.</p>
+          <div class="service-list">
+            <span>Hooks</span><span>Variants</span><span>CTA-driven</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROCESS ============ -->
+  <section id="process">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <h2>How it works.</h2>
+        <p>Four steps. No back and forth.</p>
+      </div>
+
+      <div class="process-track reveal">
+        <div class="process-step">
+          <div class="process-index">01</div>
+          <h3>Бриф</h3>
+          <p>You send raw footage and goals. We lock the direction.</p>
+        </div>
+        <div class="process-step">
+          <div class="process-index">02</div>
+          <h3>Монтаж</h3>
+          <p>We cut, pace and sound-design the first version.</p>
+        </div>
+        <div class="process-step">
+          <div class="process-index">03</div>
+          <h3>Правки</h3>
+          <p>You review. We refine — fast, focused revisions.</p>
+        </div>
+        <div class="process-step">
+          <div class="process-index">04</div>
+          <h3>Готово</h3>
+          <p>Final export, ready to post. Frame by frame, done right.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TESTIMONIALS ============ -->
+  <section id="testimonials">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <h2>What clients say.</h2>
+        <p>Real feedback, names kept private. Swap the text anytime.</p>
+      </div>
+
+      <div class="testi-grid reveal">
+        <div class="testi-card">
+          <div>
+            <div class="testi-quote">“</div>
+            <p class="testi-text">Turnaround was fast and the pacing made our Reels feel completely different. Replace this with a real quote.</p>
+          </div>
+          <div class="testi-rating" aria-label="5 out of 5">★★★★★</div>
+        </div>
+        <div class="testi-card">
+          <div>
+            <div class="testi-quote">“</div>
+            <p class="testi-text">Clear communication, clean edits, zero micromanaging needed. Replace this with a real quote.</p>
+          </div>
+          <div class="testi-rating" aria-label="5 out of 5">★★★★★</div>
+        </div>
+        <div class="testi-card">
+          <div>
+            <div class="testi-quote">“</div>
+            <p class="testi-text">Our ad watch-time went up right after we switched. Replace this with a real quote.</p>
+          </div>
+          <div class="testi-rating" aria-label="5 out of 5">★★★★★</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER / CTA ============ -->
+  <footer id="contact">
+    <div class="wrap">
+      <div class="footer-cta reveal">
+        <span class="eyebrow">Let's talk</span>
+        <h2 style="margin-top:20px;">Let's make something<br><span>worth watching.</span></h2>
+        <div class="footer-actions">
+          <a href="#" class="btn btn-solid">DM to book</a>
+          <a href="#" class="btn btn-ghost">Send a brief</a>
+        </div>
+      </div>
+
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#top" class="logo" aria-label="Vis Studio home">
+            <svg width="24" height="24" viewBox="0 0 64 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 6 L26 20 L6 34" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <line x1="38" y1="30" x2="46" y2="10" stroke="#D6FF3F" stroke-width="5" stroke-linecap="round"/>
+              <line x1="48" y1="30" x2="56" y2="10" stroke="#D6FF3F" stroke-width="5" stroke-linecap="round"/>
+              <line x1="58" y1="30" x2="66" y2="10" stroke="#D6FF3F" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+            </svg>
+            <span class="logo-text">Vis Studio</span>
+          </a>
+          <p>Video editing for Reels, YouTube and Ads. Frame by frame.</p>
+        </div>
+
+        <div class="footer-links">
+          <div class="footer-col">
+            <h4>Site</h4>
+            <a href="#work">Portfolio</a>
+            <a href="#services">Services</a>
+            <a href="#process">Process</a>
+            <a href="#testimonials">Reviews</a>
+          </div>
+          <div class="footer-col">
+            <h4>Socials</h4>
+            <a href="#" target="_blank" rel="noopener">Instagram</a>
+            <a href="#" target="_blank" rel="noopener">Kwork</a>
+            <a href="#" target="_blank" rel="noopener">Upwork</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© <span id="year"></span> Vis Studio. All rights reserved.</span>
+        <a href="#top" class="back-top" aria-label="Back to top">↑</a>
+      </div>
+    </div>
+  </footer>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  /* Header background on scroll */
+  var header = document.getElementById('siteHeader');
+  function onScroll(){
+    if (window.scrollY > 20) header.classList.add('scrolled');
+    else header.classList.remove('scrolled');
+  }
+  onScroll();
+  window.addEventListener('scroll', onScroll, {passive:true});
+
+  /* Mobile nav toggle */
+  var burger = document.getElementById('burgerBtn');
+  var mobileNav = document.getElementById('mobileNav');
+  function closeMobileNav(){
+    mobileNav.classList.remove('open');
+    burger.classList.remove('open');
+    burger.setAttribute('aria-expanded','false');
+    document.body.style.overflow = '';
+  }
+  burger.addEventListener('click', function(){
+    var isOpen = mobileNav.classList.toggle('open');
+    burger.classList.toggle('open', isOpen);
+    burger.setAttribute('aria-expanded', String(isOpen));
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  });
+  mobileNav.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', closeMobileNav);
+  });
+
+  /* Only one video plays at a time; none autoplay (preload="metadata" only) */
+  var videos = document.querySelectorAll('.reel-video');
+  videos.forEach(function(v){
+    v.addEventListener('play', function(){
+      videos.forEach(function(other){
+        if (other !== v) other.pause();
+      });
+    });
+  });
+
+  /* Scroll reveal */
+  var revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting){
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, {threshold:0.12});
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('in'); });
+  }
+
+  /* Footer year */
+  var yearEl = document.getElementById('year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  /* Count-up hero stats */
+  var statEls = document.querySelectorAll('.stat-num');
+  function animateCount(el){
+    var target = parseFloat(el.getAttribute('data-target')) || 0;
+    var suffix = el.getAttribute('data-suffix') || '';
+    var duration = 1300;
+    var start = null;
+    function step(ts){
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / duration, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  if (statEls.length){
+    if ('IntersectionObserver' in window){
+      var statIo = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if (entry.isIntersecting){
+            animateCount(entry.target);
+            statIo.unobserve(entry.target);
+          }
+        });
+      }, {threshold:0.5});
+      statEls.forEach(function(el){ statIo.observe(el); });
+    } else {
+      statEls.forEach(function(el){
+        el.textContent = el.getAttribute('data-target') + (el.getAttribute('data-suffix') || '');
+      });
+    }
+  }
+
+  /* Pointer-driven "wow" interactions: only on devices with a real mouse */
+  var canHover = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (canHover && !reducedMotion){
+
+    /* Magnetic buttons */
+    document.querySelectorAll('.btn').forEach(function(btn){
+      btn.addEventListener('mousemove', function(e){
+        var r = btn.getBoundingClientRect();
+        var mx = (e.clientX - r.left) - r.width / 2;
+        var my = (e.clientY - r.top) - r.height / 2;
+        btn.style.transform = 'translate(' + (mx * 0.25).toFixed(1) + 'px,' + (my * 0.35).toFixed(1) + 'px)';
+      });
+      btn.addEventListener('mouseleave', function(){
+        btn.style.transform = '';
+      });
+    });
+
+    /* Reel card 3D tilt */
+    document.querySelectorAll('.reel-card').forEach(function(card){
+      card.addEventListener('mousemove', function(e){
+        var r = card.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width - 0.5;
+        var py = (e.clientY - r.top) / r.height - 0.5;
+        var rotY = px * 12;
+        var rotX = -py * 12;
+        card.style.transform = 'perspective(900px) rotateX(' + rotX.toFixed(2) + 'deg) rotateY(' + rotY.toFixed(2) + 'deg) scale(1.035)';
+      });
+      card.addEventListener('mouseleave', function(){
+        card.style.transform = '';
+      });
+    });
+
+    /* Hero spotlight follows the cursor */
+    var heroEl = document.querySelector('.hero');
+    if (heroEl){
+      heroEl.addEventListener('mousemove', function(e){
+        var r = heroEl.getBoundingClientRect();
+        heroEl.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+        heroEl.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+      });
+    }
+  }
+})();
+</script>
+
+</body>
+</html>
